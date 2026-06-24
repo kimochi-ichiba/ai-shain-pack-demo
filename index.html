@@ -2818,7 +2818,7 @@ DEMO_BUILDERS.sekkei=function(body){
     o.scrollIntoView({behavior:"smooth",block:"nearest"});toast("設計書のたたき台と確認事項を作成しました（確定は人）");};
 };
 DEMO_BUILDERS.kicho=function(body){
-  body.appendChild(mdLead("レシート・通帳・請求書をOCRで読み取り、勘定科目をAIが自動で仕分け→仕訳に記帳。銀行明細と自動照合。会計ソフト連携。最終確定・申告は人/税理士。"));
+  body.appendChild(mdLead("レシート・通帳・カード明細・請求書をOCR/CSVで取り込み、勘定科目をAIが自動で仕分け→仕訳に記帳。銀行明細と自動照合。会計ソフト連携。最終確定・申告は人/税理士。"));
   _okpi(body,[["124件","今月の記帳"],["96%","自動仕分け率"],["3件","未照合（要確認）"]]);
   var o=_oout(body);_obtn(body,I.scan+"<span>レシート・通帳を読み取って記帳</span>").onclick=function(){o.innerHTML="";
     var lab=el("div");lab.style.cssText="font-size:12px;font-weight:700;color:#14512a;margin:2px 0 8px";lab.textContent="AIが仕分けた仕訳（サンプル）";o.appendChild(lab);
@@ -2851,6 +2851,12 @@ DEMO_BUILDERS.kicho=function(body){
     var ai=el("div","note box");ai.style.marginTop="12px";ai.innerHTML="<b>番頭の指摘：</b>非適格仕入が¥1,500,000＝仕入税額控除ができません（経過措置あり）。インボイス登録済みの仕入先に切り替えると、年間で消費税の負担を抑えられます。納税見込み（概算）は「仮受−仮払（適格）」で算出します。";o3.appendChild(ai);
     var nn2=el("div","note");nn2.style.marginTop="8px";nn2.textContent="※デモのサンプルです。税額の確定・申告は税理士が行います。";o3.appendChild(nn2);
     o3.scrollIntoView({behavior:"smooth",block:"nearest"});toast("月次推移・部門別・消費税区分を作成しました");};
+  var o4=_oout(body);_obtn(body,I.card+"<span>クレジットカード明細を取り込んで仕分け</span>").onclick=function(){o4.innerHTML="";
+    hd(o4,"カード明細の自動仕分け（サンプル）");
+    _otbl(o4,["日付","利用先","金額","科目","区分"],[["6/2","ガソリンスタンド","¥6,800","旅費交通費","事業"],["6/4","Amazon（事務用品）","¥4,200","消耗品費","事業"],["6/9","クラウド月額","¥4,980","通信費","事業(定期)"],["6/15","コンビニ","¥1,200","—","私用？⚠"],["6/20","動画サブスク","¥1,990","—","私用？⚠"],["6/24","取引先と会食","¥22,000","交際費","事業"]]);
+    var ai=el("div","note box");ai.style.marginTop="12px";ai.innerHTML="<b>番頭の指摘：</b>私用の可能性が2件（¥3,190）＝事業経費から除外を推奨。定期課金（サブスク）が2件、使っていなければ解約で月々の固定費を削減できます。事業分は自動で仕訳に取り込みます。";o4.appendChild(ai);
+    var nn3=el("div","note");nn3.style.marginTop="8px";nn3.textContent="※デモのサンプルです。事業/私用の最終判断・確定は人/税理士が行います。";o4.appendChild(nn3);
+    o4.scrollIntoView({behavior:"smooth",block:"nearest"});toast("カード明細を取り込んで仕分けました（私用検知つき）");};
 };
 /* RICH9 */
 DEMO_BUILDERS.chase=function(body){
@@ -3886,7 +3892,7 @@ kuchikomi:{lead:"口コミの返信、放置しない。",kpis:[["返信漏れ0"
 keiyaku:{lead:"気づかない自動更新を、止める。",kpis:[["更新 見逃し0","アラート"],["ムダ契約 検知","節約"]],points:["契約更新日を一覧で管理","更新・解約の期限前にアラート","二重・不要なサブスクを検知","担当者へ自動でリマインド"]},
 zumen:{lead:"打合せのたたき台図面を、待たせない。",kpis:[["作図-70%","下準備の時間"],["即日","ラフ提示"]],points:["寸法・要望からラフ間取り図を生成","注釈・寸法つきで認識ズレを防ぐ","修正もその場で反映","正式図面はCAD等で担当が仕上げる"]},
 sekkei:{lead:"設計書づくりの“最初の8割”を、AIに。",kpis:[["作成-80%","下書きの時間"],["抜け漏れ↓","確認項目を自動列挙"]],points:["やりたいことから章立て＋本文を下書き","抜け漏れ・確認事項をリスト化","用語・体裁を社内テンプレで統一","確定・承認は担当（人）"]},
-kicho:{lead:"領収書の山を、写真でゼロに。",kpis:[["月-12h","記帳・入力"],["96%","自動仕分け"]],points:["レシート・通帳・請求書をOCRで読取","勘定科目をAIが自動で仕分け／銀行明細と自動照合","試算表・貸借対照表(BS)・損益計算書(PL)を自動作成","会計ソフトへ連携（確定・申告は人/税理士）"]}
+kicho:{lead:"領収書の山を、写真でゼロに。",kpis:[["月-12h","記帳・入力"],["96%","自動仕分け"]],points:["レシート・通帳・カード明細・請求書をOCR/取込","勘定科目をAIが自動で仕分け／銀行明細と自動照合","試算表・貸借対照表(BS)・損益計算書(PL)を自動作成","会計ソフトへ連携（確定・申告は人/税理士）"]}
 };
 
 function viewOption(f){
