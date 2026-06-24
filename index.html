@@ -735,6 +735,7 @@ const NAV = [
   {id:"hojokin",   ic:I.hojo, label:"補助金斡旋", badge:"2", sec:"main"},
   {id:"kioku",     ic:I.ai,   label:"専属AI記憶ノート", sec:"main"},
   {id:"tsuchi",    ic:I.bell, label:"通知連携", sec:"main"},
+  {id:"bunseki",   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>', label:"前年比較・季節指数", sec:"main"},
   {id:"options",   ic:I.star, label:"オプション機能", sec:"opt", opt:true}
 ];
 
@@ -3880,8 +3881,89 @@ function viewOption(f){
   return v;
 }
 
+function viewYoY(){
+  const v=el("div","view");
+  v.innerHTML=`<div class="page-head"><h1>前年比較・季節指数</h1><p>去年と今年の売上を月ごとに比較し、季節のクセ（季節指数）を見える化。仕入れ・人員の“山と谷”を先読みします。</p></div>`;
+  const LY=[2800000,2600000,3000000,3100000,3200000,3000000,3400000,3300000,3100000,3200000,3500000,4200000];
+  const TY=[3100000,2900000,3350000,3450000,3580000,3820000,3650000,3500000,3300000,3450000,3780000,4550000];
+  const M=["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+  const sumLY=LY.reduce(function(a,b){return a+b;},0), sumTY=TY.reduce(function(a,b){return a+b;},0);
+  const yoyAll=Math.round((sumTY-sumLY)/sumLY*1000)/10;
+  const avgM=M.map(function(_,i){return (LY[i]+TY[i])/2;});
+  const overall=avgM.reduce(function(a,b){return a+b;},0)/12;
+  const SI=avgM.map(function(x){return Math.round(x/overall*100);});
+  const peak=SI.indexOf(Math.max.apply(null,SI)), bottom=SI.indexOf(Math.min.apply(null,SI));
+  const k=el("div");k.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px";
+  const stat=function(l,val,sub,tone){var d=el("div","card");d.style.cssText="padding:15px 17px;border-top:3px solid "+(tone==="amber"?"#c98a2b":"#1f6b3a");d.innerHTML='<div style="font-size:12px;color:var(--muted);font-weight:700">'+l+'</div><div style="font-family:\'Oswald\',sans-serif;font-weight:700;font-size:22px;color:'+(tone==="amber"?"#a96a10":"#14512a")+';margin-top:3px">'+val+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+sub+'</div>';return d;};
+  k.append(stat("今年の累計売上",yen(sumTY),"前年比 "+(yoyAll>=0?"+":"")+yoyAll+"%"),stat("去年の累計売上",yen(sumLY),"参考"),stat("最需要期",M[peak],"季節指数 "+SI[peak]),stat("閑散期",M[bottom],"季節指数 "+SI[bottom],"amber"));
+  v.appendChild(k);
+  // 前年比較
+  const c1=el("div","card");c1.innerHTML='<div class="card-h"><h3>📊 前年比較（月別売上）</h3><span class="sub" style="color:var(--muted)">グレー＝去年 ／ 緑＝今年（％＝前年同月比）</span></div>';
+  const mx=Math.max.apply(null,LY.concat(TY));
+  const ch=el("div");ch.style.cssText="display:flex;align-items:flex-end;gap:9px;height:200px;padding-top:20px;border-bottom:1px solid var(--line);margin-top:4px";
+  M.forEach(function(m,i){var yo=Math.round((TY[i]-LY[i])/LY[i]*100);
+    var col=el("div");col.style.cssText="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px";
+    var pc=el("div");pc.style.cssText="font-size:9.5px;font-weight:700;color:"+(yo>=0?"#1f6b3a":"#a96a10");pc.textContent=(yo>=0?"+":"")+yo+"%";
+    var bars=el("div");bars.style.cssText="display:flex;align-items:flex-end;gap:3px;height:100%;width:100%;justify-content:center";
+    var bLY=el("div");bLY.style.cssText="width:42%;max-width:15px;background:#c9d3cb;border-radius:4px 4px 0 0;height:"+Math.round(LY[i]/mx*140)+"px";
+    var bTY=el("div");bTY.style.cssText="width:42%;max-width:15px;background:linear-gradient(180deg,#3f8d5c,#1f6b3a);border-radius:4px 4px 0 0;height:"+Math.round(TY[i]/mx*140)+"px";
+    bars.append(bLY,bTY);
+    var lb=el("div");lb.style.cssText="font-size:10px;color:var(--muted)";lb.textContent=m;
+    col.append(pc,bars,lb);ch.append(col);});
+  c1.append(ch);v.appendChild(c1);
+  // 季節指数
+  const c2=el("div","card mt24");c2.innerHTML='<div class="card-h"><h3>📈 季節指数（過去2年平均・年平均=100）</h3><span class="sub" style="color:var(--muted)">100より上＝繁忙 ／ 下＝閑散</span></div>';
+  const simax=Math.max.apply(null,SI);
+  const ch2=el("div");ch2.style.cssText="display:flex;align-items:flex-end;gap:8px;height:185px;padding-top:20px;margin-top:4px;border-bottom:1px solid var(--line)";
+  SI.forEach(function(s,i){var col=el("div");col.style.cssText="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px";
+    var val=el("div");val.style.cssText="font-size:10px;font-weight:800;color:"+(s>=100?"#1f6b3a":"#a96a10");val.textContent=s;
+    var bar=el("div");bar.style.cssText="width:100%;max-width:30px;border-radius:5px 5px 0 0;background:"+(s>=100?"linear-gradient(180deg,#3f8d5c,#1f6b3a)":"linear-gradient(180deg,#e3bd80,#c98a2b)")+";height:"+Math.round(s/simax*140)+"px";
+    var lb=el("div");lb.style.cssText="font-size:10px;color:var(--muted)";lb.textContent=M[i];
+    col.append(val,bar,lb);ch2.append(col);});
+  c2.append(ch2);v.appendChild(c2);
+  const ai=el("div","note box");ai.style.marginTop="16px";
+  ai.innerHTML="<b>番頭の読み：</b>"+M[peak]+"が最需要期（季節指数"+SI[peak]+"）。仕入れ・人員・配送をこの月に厚く。"+M[bottom]+"は閑散（指数"+SI[bottom]+"）＝固定費を抑え、与信チェックや新規開拓に時間を回すのが得策です。前年比は通年で"+(yoyAll>=0?"+":"")+yoyAll+"%。";
+  v.appendChild(ai);
+  const RZ=[
+   ["年始の休業で取引先の発注が止まりやすい時期。","年末にまとめ受注を促し、休業明けの初荷・新年メニューを先に提案。"],
+   ["寒さで葉物以外の需要が減り、営業日数も少なく、最も売上が落ちる月。","鍋・煮物向けの旬野菜と加工品を提案。閑散を活かして新規開拓・与信整備・棚卸しに注力。"],
+   ["年度末で取引先の動きが分かれる、回復の入口。","新年度・新メニュー向けの提案を前倒しで。"],
+   ["新生活・新メニューで需要が戻る。","春野菜の販促と、新規取引先の立ち上げを。"],
+   ["気候が安定し堅調。","葉物・薬味の回転を上げる。"],
+   ["梅雨で天候による変動が出やすい。","天候に左右されにくい品目・産地を分散。"],
+   ["夏野菜が最盛で需要増、繁忙の入口。","供給量と配送体制を厚くする。"],
+   ["盆休みで発注が一時的に止まる谷ができる。","盆前のまとめ受注と、休み明けの初動を準備。"],
+   ["残暑明けで平常運転に戻る。","秋冬の仕込み提案を開始。"],
+   ["気候が良く堅調。","鍋シーズン前の提案を始める。"],
+   ["年末前で需要が上向く。","年末需要の事前確保と人員計画。"],
+   ["年末需要でピーク。","仕入れ・人員・配送を最大化し、欠品を防ぐ。"]
+  ];
+  const tabWrap=el("div","card mt24");
+  tabWrap.innerHTML='<div class="card-h"><h3>📋 単月・四半期の分析と改善</h3><span class="sub" style="color:var(--muted)">なぜ落ちた？どう改善する？</span></div>';
+  const tabs=el("div");tabs.style.cssText="display:flex;gap:8px;margin:4px 0 14px";
+  const paneM=el("div"), paneQ=el("div");paneQ.style.display="none";
+  const btnM=el("button","btn btn-green btn-sm","単月で見る");const btnQ=el("button","btn btn-opt-o btn-sm","四半期で見る");
+  btnM.onclick=function(){paneM.style.display="block";paneQ.style.display="none";btnM.className="btn btn-green btn-sm";btnQ.className="btn btn-opt-o btn-sm";};
+  btnQ.onclick=function(){paneM.style.display="none";paneQ.style.display="block";btnQ.className="btn btn-green btn-sm";btnM.className="btn btn-opt-o btn-sm";};
+  tabs.append(btnM,btnQ);tabWrap.append(tabs);
+  M.forEach(function(m,i){var yo=Math.round((TY[i]-LY[i])/LY[i]*100);var slow=SI[i]<100;
+    var row=el("div");row.style.cssText="border:1px solid var(--line);border-left:3px solid "+(slow?"#c98a2b":"#1f6b3a")+";border-radius:10px;padding:11px 14px;margin-bottom:9px;background:"+(slow?"#fdfaf3":"#fff");
+    row.innerHTML='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-weight:800;font-size:14px;color:#14512a">'+m+'</span><span style="font-size:11.5px;color:var(--muted)">売上 '+yen(TY[i])+' ／ 前年比 '+(yo>=0?"+":"")+yo+'% ／ 指数 '+SI[i]+'</span>'+(slow?'<span class="chip warn" style="font-size:10px;padding:1px 8px"><span class="d"></span>閑散</span>':'<span class="chip green" style="font-size:10px;padding:1px 8px"><span class="d"></span>繁忙寄り</span>')+'</div><div style="font-size:12.5px;line-height:1.7;margin-top:7px"><b style="color:#a96a10">なぜ：</b>'+RZ[i][0]+'</div><div style="font-size:12.5px;line-height:1.7;margin-top:3px"><b style="color:#14512a">改善：</b>'+RZ[i][1]+'</div>';
+    paneM.append(row);});
+  const Q=[["Q1（1〜3月）",0,3,"冬枯れ・年始休業で最も静かな時期。","固定費を抑え、新規開拓・与信・棚卸しに時間を投資。春の仕込み営業を前倒し。"],["Q2（4〜6月）",3,6,"新生活・新メニューで需要が戻る回復期。","春野菜の販促と新規取引先の立ち上げで土台づくり。"],["Q3（7〜9月）",6,9,"夏野菜最盛＋盆の谷が混在。","ピークの供給・配送を厚く。盆前後の受注を平準化。"],["Q4（10〜12月）",9,12,"年末需要で一年のピーク。","仕入れ・人員・配送を最大化し、欠品と機会損失を防ぐ。"]];
+  const qg=el("div");qg.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:12px";
+  Q.forEach(function(q){var sT=0,sL=0;for(var i=q[1];i<q[2];i++){sT+=TY[i];sL+=LY[i];}var yo=Math.round((sT-sL)/sL*100);
+    var d=el("div");d.style.cssText="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff";
+    d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:800;color:#14512a">'+q[0]+'</span><span style="font-family:\'Oswald\',sans-serif;font-weight:700;color:'+(yo>=0?"#1f6b3a":"#a96a10")+'">前年比 '+(yo>=0?"+":"")+yo+'%</span></div><div style="font-size:11.5px;color:var(--muted);margin-top:2px">売上 '+yen(sT)+'</div><div style="font-size:12.5px;line-height:1.7;margin-top:8px"><b style="color:#a96a10">傾向：</b>'+q[3]+'</div><div style="font-size:12.5px;line-height:1.7;margin-top:3px"><b style="color:#14512a">打ち手：</b>'+q[4]+'</div>';
+    qg.append(d);});
+  paneQ.append(qg);
+  tabWrap.append(paneM,paneQ);v.appendChild(tabWrap);
+  v.appendChild(el("div","note","※数字はデモ用の架空サンプルです。実運用では会計・販売データから自動で算出します。"));
+  v.appendChild(footer());
+  return v;
+}
 const VIEWS={
-  banto:viewBanto, team:viewTeam, mail:viewMail, weekly:viewWeekly, teiki:viewTeiki, sim:viewSim, donyu:viewDonyu, soudan:viewSoudan,
+  banto:viewBanto, team:viewTeam, mail:viewMail, weekly:viewWeekly, teiki:viewTeiki, bunseki:viewYoY, sim:viewSim, donyu:viewDonyu, soudan:viewSoudan,
   dashboard:viewDashboard, eigyo:viewEigyo, tasks:viewTasks, nippo:viewNippo, shift:viewShift,
   shushi:viewShushi, seikyu:viewSeikyu, hojokin:viewHojokin, kioku:viewKioku,
   shikin:viewShikin, shorui:viewShorui, sakugen:viewSakugen,
@@ -3909,7 +3991,7 @@ function buildNav(){
       ["お金",["shushi","seikyu","shikin","sakugen","hojokin"]],
       ["人と現場",["shift","nippo","tasks"]],
       ["営業・集客",["eigyo","mail"]],
-      ["経営",["weekly","teiki","soudan","kioku"]],
+      ["経営",["weekly","teiki","bunseki","soudan","kioku"]],
       ["導入・設定",["sim","donyu","shorui","tsuchi"]]
     ];
     var byId={};NAV.forEach(function(n){byId[n.id]=n;});var used={};
@@ -3951,6 +4033,7 @@ function go(id){
 
 /* 各メイン機能の「詳しい説明」（page-headの直下に自動挿入） */
 const FEATURE_INFO={
+  bunseki:{what:"去年と今年の売上を月ごとに比べ、季節のクセ（季節指数）まで見える化。仕入れ・人員の山と谷を先読みできます。",points:["前年同月比を月ごとに表示","季節指数（年平均=100）で繁忙・閑散をひと目","最需要期・閑散期を番頭が指摘","仕入れ・人員・新規開拓の打ち手を提案"]},
   banto:{what:"会社の数字（お金・タスク・人）を“全部つないで”見ているAI参謀。話しかけると、いま会社のどこが弱いかを根拠つきで答えます。",points:["「今月ヤバい数字ある？」など普通の言葉で質問→未入金・資金・経費などから弱点を名指し","聞かなくても朝イチで『今日の経営の急所』を赤信号で提示","頑張った社員を見つけて“ねぎらい”を進言（お金の決定・送金は社長）","※答えの根拠は実データ。送信・支払い・確定は必ず人。番頭チャットは今後実装の新機能を含む"]},
   dashboard:{what:"会社のお金・タスク・人の状態を1画面に集約。朝この1枚を見れば今日やることが分かります。",points:["売上・未入金・今日のタスク・日報の提出状況をひと目で","今月の営業（案件・アポ）サマリーも同じ画面に","AI社員からの『今日のおすすめ』を3つ提示","気になる数字はタップで各画面へ"]},
   weekly:{what:"今週の収支と「だれが・どの作業をしているか」を1枚に。社長・経理・従業員の全員が同じ画面で見られます。",points:["今週の売上・入金・支出・差引を自動集計","従業員ごとの今週の作業・稼働・状態（順調/遅れ/未提出）を見える化","番頭が今週の総評を一言","ワンタップで全員に共有（送信は人）"]},
