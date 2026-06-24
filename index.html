@@ -727,6 +727,7 @@ const NAV = [
   {id:"nippo",     ic:I.nippo, label:"日報", sec:"main"},
   {id:"shift",     ic:I.shift, label:"シフト", sec:"main"},
   {id:"shushi",    ic:I.money, label:"収支・月次", sec:"main"},
+  {id:"keihi",     ic:I.scan, label:"自動経費取込・仕訳", sec:"main"},
   {id:"seikyu",    ic:I.card, label:"請求・入金", sec:"main"},
   {id:"mail",      ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>', label:"メール", sec:"main"},
   {id:"shikin",    ic:I.money, label:"資金繰り", sec:"main"},
@@ -4007,10 +4008,38 @@ function viewYoY(){
   v.appendChild(footer());
   return v;
 }
+function viewKeihi(){
+  const v=el("div","view");
+  v.innerHTML=`<div class="page-head"><h1>自動経費取込・仕訳便 <span style="font-size:12px;font-weight:700;color:#fff;background:var(--green);padding:2px 10px;border-radius:20px;margin-left:8px;vertical-align:middle">メイン機能</span></h1><p>クレジットカード・Amazon・ネット販売の明細も、メールに届く請求書PDFも、自動で集めて経費を勘定科目に振り分け。社長は確認するだけです。</p></div>`;
+  const k=el("div");k.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px";
+  const stat=function(l,val,sub,tone){var d=el("div","card");d.style.cssText="padding:15px 17px;border-top:3px solid "+(tone==="amber"?"#c98a2b":"#1f6b3a");d.innerHTML='<div style="font-size:12px;color:var(--muted);font-weight:700">'+l+'</div><div style="font-family:\'Oswald\',sans-serif;font-weight:700;font-size:22px;color:'+(tone==="amber"?"#a96a10":"#14512a")+';margin-top:3px">'+val+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+sub+'</div>';return d;};
+  k.append(stat("今月の取込","186件","カード/Amazon/メール"),stat("自動仕訳率","95%","AIが科目を判定"),stat("要確認","4件","私用・不明","amber"),stat("メール請求書","12件","PDFを自動収集"));
+  v.appendChild(k);
+  const sc=el("div","card");sc.innerHTML='<div class="card-h"><h3>取り込めるもの</h3><span class="sub" style="color:var(--muted)">つなぐだけで自動収集</span></div>';
+  [["💳 クレジットカード明細","利用先から科目を自動判定・事業/私用も仕分け"],["🛒 Amazon・楽天などネット販売","購入明細を取り込み、消耗品・仕入などへ自動仕訳"],["📧 メールの請求書PDF","受信メールから請求書PDFを探して取得（閲覧のみ・送信しない）"]].forEach(function(s){var r=el("div","md-row");r.innerHTML='<div class="l"><b>'+s[0]+'</b><span>'+s[1]+'</span></div><span class="chip green" style="font-size:10px;padding:1px 8px">連携OK</span>';sc.appendChild(r);});
+  v.appendChild(sc);
+  const btn=el("button","btn btn-green mt16");btn.style.width="100%";btn.innerHTML=I.ai+"<span>すべて取り込んで自動で帳簿に振り分け</span>";v.appendChild(btn);
+  const out=el("div");out.style.marginTop="14px";v.appendChild(out);
+  btn.onclick=function(){out.innerHTML="";
+    var c=el("div","card");c.innerHTML='<div class="card-h"><h3>AIが振り分けた仕訳（サンプル）</h3><span class="sub" style="color:var(--muted)">取込元つき</span></div>';out.appendChild(c);
+    _otbl(c,["日付","取込元","利用先","勘定科目","金額","区分"],[["6/2","カード","ガソリンスタンド","旅費交通費","¥6,800","事業"],["6/4","Amazon","事務用品（コピー用紙等）","消耗品費","¥4,200","事業"],["6/9","カード","クラウド月額","通信費","¥4,980","事業(定期)"],["6/11","メール請求書","大分青果市場（仕入）","仕入高","¥182,000","事業"],["6/15","カード","コンビニ","—","¥1,200","私用？⚠"],["6/18","Amazon","書籍","新聞図書費","¥2,400","事業"],["6/22","メール請求書","運送会社","荷造運賃","¥38,000","事業"]]);
+    var ai=el("div","note box");ai.style.marginTop="12px";ai.innerHTML="<b>番頭の処理：</b>186件のうち177件（95%）を自動で仕訳しました。私用の可能性4件と科目が不明な1件だけ、確認をお願いします。メールの請求書PDFは12件を取り込み済みです。";out.appendChild(ai);
+    out.scrollIntoView({behavior:"smooth",block:"nearest"});toast("経費を取り込んで自動で振り分けました（確定は人）");};
+  const mb=el("button","btn btn-opt-o btn-sm mt16","📧 メールから請求書PDFを探す");v.appendChild(mb);
+  const mout=el("div");mout.style.marginTop="12px";v.appendChild(mout);
+  mb.onclick=function(){mout.innerHTML="";
+    var c=el("div","card");c.innerHTML='<div class="card-h"><h3>メールで見つかった請求書（サンプル）</h3></div>';mout.appendChild(c);
+    _otbl(c,["差出人","件名","金額"],[["大分青果市場","6月分 ご請求書.pdf","¥182,000"],["運送会社","運賃請求書（6月）.pdf","¥38,000"],["クラウド会社","利用料 領収書.pdf","¥4,980"]]);
+    var n=el("div","note box");n.style.marginTop="12px";n.innerHTML="<b>安全：</b>メールは<b>閲覧のみ</b>（送信・返信はしません）。見つけた請求書PDFを経費に取り込み、仕訳の下書きまで。確定は社長/税理士です。";mout.appendChild(n);
+    mout.scrollIntoView({behavior:"smooth",block:"nearest"});toast("メールから請求書PDFを12件見つけました（閲覧のみ）");};
+  v.appendChild(el("div","note","※数字・明細はデモ用の架空サンプルです。メール連携は閲覧のみ、確定・申告は人/税理士が行います。"));
+  v.appendChild(footer());
+  return v;
+}
 const VIEWS={
   banto:viewBanto, team:viewTeam, mail:viewMail, weekly:viewWeekly, teiki:viewTeiki, bunseki:viewYoY, sim:viewSim, donyu:viewDonyu, soudan:viewSoudan,
   dashboard:viewDashboard, eigyo:viewEigyo, tasks:viewTasks, nippo:viewNippo, shift:viewShift,
-  shushi:viewShushi, seikyu:viewSeikyu, hojokin:viewHojokin, kioku:viewKioku,
+  shushi:viewShushi, keihi:viewKeihi, seikyu:viewSeikyu, hojokin:viewHojokin, kioku:viewKioku,
   shikin:viewShikin, shorui:viewShorui, sakugen:viewSakugen,
   tsuchi:viewTsuchi, options:viewOptions, "emp-home":viewEmpHome, "emp-eigyo":viewEmpEigyo
 };
@@ -4033,7 +4062,7 @@ function buildNav(){
   } else {
     var NAV_GROUPS=[
       ["はじめに",["banto","team","dashboard"]],
-      ["お金",["shushi","seikyu","shikin","sakugen","hojokin"]],
+      ["お金",["shushi","keihi","seikyu","shikin","sakugen","hojokin"]],
       ["人と現場",["shift","nippo","tasks"]],
       ["営業・集客",["eigyo","mail"]],
       ["経営",["weekly","teiki","bunseki","soudan","kioku"]],
@@ -4078,6 +4107,7 @@ function go(id){
 
 /* 各メイン機能の「詳しい説明」（page-headの直下に自動挿入） */
 const FEATURE_INFO={
+  keihi:{what:"カード・Amazon・ネット販売の明細、メールに届く請求書PDFまで自動で集めて、経費を勘定科目に自動で振り分けます。",points:["クレジットカード・Amazon・楽天などの明細を自動取込","メール内の請求書PDFを探して取得（閲覧のみ・送信しない）","AIが勘定科目に自動仕訳＝事業/私用も判定","社長は確認するだけ。確定・申告は人/税理士"]},
   bunseki:{what:"去年と今年の売上を月ごとに比べ、季節のクセ（季節指数）まで見える化。仕入れ・人員の山と谷を先読みできます。",points:["前年同月比を月ごとに表示","季節指数（年平均=100）で繁忙・閑散をひと目","最需要期・閑散期を番頭が指摘","仕入れ・人員・新規開拓の打ち手を提案"]},
   banto:{what:"会社の数字（お金・タスク・人）を“全部つないで”見ているAI参謀。話しかけると、いま会社のどこが弱いかを根拠つきで答えます。",points:["「今月ヤバい数字ある？」など普通の言葉で質問→未入金・資金・経費などから弱点を名指し","聞かなくても朝イチで『今日の経営の急所』を赤信号で提示","頑張った社員を見つけて“ねぎらい”を進言（お金の決定・送金は社長）","※答えの根拠は実データ。送信・支払い・確定は必ず人。番頭チャットは今後実装の新機能を含む"]},
   dashboard:{what:"会社のお金・タスク・人の状態を1画面に集約。朝この1枚を見れば今日やることが分かります。",points:["売上・未入金・今日のタスク・日報の提出状況をひと目で","今月の営業（案件・アポ）サマリーも同じ画面に","AI社員からの『今日のおすすめ』を3つ提示","気になる数字はタップで各画面へ"]},
