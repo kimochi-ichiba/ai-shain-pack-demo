@@ -716,6 +716,7 @@ const I = {
 const NAV = [
   {id:"banto",     ic:I.ai,   label:"番頭（経営参謀AI）", sec:"main"},
   {id:"team",      ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5a3 3 0 0 1 0 6"/><path d="M18.5 20a6 6 0 0 0-3-5.2"/></svg>', label:"AI社員チーム", sec:"main"},
+  {id:"gyoshu",    ic:I.deal, label:"業種別ソリューション", sec:"main"},
   {id:"dashboard", ic:I.home, label:"ダッシュボード", sec:"main"},
   {id:"weekly",    ic:I.nippo, label:"週次レポート", sec:"main"},
   {id:"teiki",     ic:I.bell,  label:"経営レポート定期便", sec:"main"},
@@ -4036,8 +4037,41 @@ function viewKeihi(){
   v.appendChild(footer());
   return v;
 }
+const GYOSHU=[
+ {n:"建設・リフォーム",e:"🏗",p:["紙の見積・図面・写真がバラバラ","LINEグループ乱立で進捗が見えない","請求・原価がどんぶり勘定"],f:["図面・間取りラフ作成","見積・請求書の自動作成","案件・アポ管理","日報","記帳代行"],a:"約40〜90万円"},
+ {n:"飲食店",e:"🍴",p:["シフト作成が毎週大変","予約・口コミ対応が追いつかない","原価・棚卸しが曖昧"],f:["シフト最適化","予約受付","口コミ返信","在庫×発注","SNS投稿"],a:"約30〜70万円"},
+ {n:"美容・サロン",e:"💇",p:["予約とリマインドが手作業","リピート促進が続かない","口コミ返信が放置"],f:["予約受付","SNS投稿","口コミ返信","自動経費取込"],a:"約24〜50万円"},
+ {n:"小売・EC",e:"🛒",p:["在庫と発注の管理が大変","Amazon等の明細整理","SNS集客が手薄"],f:["在庫×発注","自動経費取込","SNS投稿","多店舗ダッシュ"],a:"約30〜80万円"},
+ {n:"運送・物流",e:"🚚",p:["配車・点呼・日報が紙","請求と入金確認","燃料費・経費の整理"],f:["シフト・勤怠","日報","請求・入金","記帳代行"],a:"約30〜70万円"},
+ {n:"士業(税理士等)",e:"📋",p:["顧問先の記帳代行が重い","書類作成に時間がかかる","問い合わせ対応"],f:["記帳代行","自動経費取込","文書作成","請求・入金"],a:"約50〜120万円"},
+ {n:"不動産",e:"🏠",p:["物件・顧客の管理がバラバラ","契約書類づくり","追客の取りこぼし"],f:["案件・アポ管理","文書作成","メール","SNS投稿"],a:"約30〜70万円"},
+ {n:"製造・町工場",e:"🏭",p:["設計・図面づくりが重い","受発注と在庫の管理","原価・請求"],f:["設計書下書き","図面ラフ作成","在庫×発注","記帳代行"],a:"約40〜90万円"},
+ {n:"介護・福祉",e:"🧓",p:["夜勤シフトの作成が大変","記録・ケアプラン","介護報酬の請求"],f:["シフト最適化","介護記録・ケアプラン","請求・入金","補助金"],a:"約30〜70万円"},
+ {n:"クリニック",e:"🏥",p:["予約・問診の受付","レセプト点検","看護・受付シフト"],f:["予約受付","Web問診","レセプト点検","シフト最適化"],a:"約30〜80万円"},
+ {n:"農業・青果",e:"🥬",p:["出荷・取引先の管理","天候・需要の波","使える補助金が分からない"],f:["発注ボード","前年比・季節指数","補助金","記帳代行"],a:"約20〜50万円"}
+];
+function viewGyoshu(){
+ const v=el("div","view");
+ v.innerHTML=`<div class="page-head"><h1>業種別ソリューション <span style="font-size:12px;font-weight:700;color:#fff;background:var(--green);padding:2px 10px;border-radius:20px;margin-left:8px;vertical-align:middle">メイン機能</span></h1><p>御社の業種を選ぶと、その業種の“あるある悩み”と、効くAI社員・年間削減の目安が出ます。営業の相手に合わせてそのまま見せられます。</p></div>`;
+ const sel=el("div");sel.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px";
+ const detail=el("div");
+ function show(g){detail.innerHTML="";
+  const head=el("div","card");head.style.cssText="background:linear-gradient(135deg,#14512a,#1f6b3a);color:#fff;border:none;margin-bottom:16px";
+  head.innerHTML='<div style="display:flex;align-items:center;gap:12px"><div style="font-size:30px">'+g.e+'</div><div><div style="font-weight:800;font-size:18px">'+g.n+'</div><div style="font-size:12px;color:#bfe6cd">効果の目安：年間 '+g.a+' の削減（目安）</div></div></div>';
+  detail.appendChild(head);
+  const two=el("div");two.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:16px";
+  const c1=el("div","card");c1.innerHTML='<div class="card-h"><h3>こんな“あるある”、ありませんか</h3></div>';g.p.forEach(function(x){var r=el("div");r.style.cssText="display:flex;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px";r.innerHTML='<span style="color:#c98a2b">💡</span><span>'+x+'</span>';c1.appendChild(r);});
+  const c2=el("div","card");c2.innerHTML='<div class="card-h"><h3>御社に効くAI社員</h3></div>';g.f.forEach(function(x){var r=el("div");r.style.cssText="display:flex;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px";r.innerHTML='<span style="color:var(--green)">✓</span><span>'+x+'</span>';c2.appendChild(r);});
+  two.append(c1,c2);detail.appendChild(two);
+  const n=el("div","note box");n.style.marginTop="14px";n.innerHTML="<b>番頭：</b>"+g.n+"なら、まずは「"+g.f[0]+"」から小さく始めて、効果を見ながら広げるのがおすすめです。標準パックは初期10万・月3万〜（オプションは必要な分だけ追加）。";detail.appendChild(n);
+ }
+ GYOSHU.forEach(function(g){var b=el("button","card click");b.style.cssText="padding:14px 8px;text-align:center;cursor:pointer";b.innerHTML='<div style="font-size:26px">'+g.e+'</div><div style="font-size:12px;font-weight:700;color:#14512a;margin-top:5px">'+g.n+'</div>';b.onclick=function(){show(g);detail.scrollIntoView({behavior:"smooth",block:"nearest"});};sel.append(b);});
+ v.appendChild(sel);v.appendChild(detail);show(GYOSHU[0]);
+ v.appendChild(el("div","note","※効果・金額は目安で、業種・規模・実装範囲により異なり保証しません。表示はサンプルです。"));
+ v.appendChild(footer());return v;
+}
 const VIEWS={
-  banto:viewBanto, team:viewTeam, mail:viewMail, weekly:viewWeekly, teiki:viewTeiki, bunseki:viewYoY, sim:viewSim, donyu:viewDonyu, soudan:viewSoudan,
+  banto:viewBanto, team:viewTeam, gyoshu:viewGyoshu, mail:viewMail, weekly:viewWeekly, teiki:viewTeiki, bunseki:viewYoY, sim:viewSim, donyu:viewDonyu, soudan:viewSoudan,
   dashboard:viewDashboard, eigyo:viewEigyo, tasks:viewTasks, nippo:viewNippo, shift:viewShift,
   shushi:viewShushi, keihi:viewKeihi, seikyu:viewSeikyu, hojokin:viewHojokin, kioku:viewKioku,
   shikin:viewShikin, shorui:viewShorui, sakugen:viewSakugen,
@@ -4061,7 +4095,7 @@ function buildNav(){
     EMP_NAV.forEach(n=>nav.appendChild(mkItem(n)));
   } else {
     var NAV_GROUPS=[
-      ["はじめに",["banto","team","dashboard"]],
+      ["はじめに",["banto","team","gyoshu","dashboard"]],
       ["お金",["shushi","keihi","seikyu","shikin","sakugen","hojokin"]],
       ["人と現場",["shift","nippo","tasks"]],
       ["営業・集客",["eigyo","mail"]],
@@ -4107,6 +4141,7 @@ function go(id){
 
 /* 各メイン機能の「詳しい説明」（page-headの直下に自動挿入） */
 const FEATURE_INFO={
+  gyoshu:{what:"御社の業種を選ぶと、その業種のよくある悩みと、効くAI社員・年間削減の目安が出ます。営業の相手に合わせて見せられます。",points:["11業種のプリセットから選ぶだけ","業種の“あるある”を即提示","効くAI社員（標準＋オプション）を表示","年間削減の目安と始め方を提案"]},
   keihi:{what:"カード・Amazon・ネット販売の明細、メールに届く請求書PDFまで自動で集めて、経費を勘定科目に自動で振り分けます。",points:["クレジットカード・Amazon・楽天などの明細を自動取込","メール内の請求書PDFを探して取得（閲覧のみ・送信しない）","AIが勘定科目に自動仕訳＝事業/私用も判定","社長は確認するだけ。確定・申告は人/税理士"]},
   bunseki:{what:"去年と今年の売上を月ごとに比べ、季節のクセ（季節指数）まで見える化。仕入れ・人員の山と谷を先読みできます。",points:["前年同月比を月ごとに表示","季節指数（年平均=100）で繁忙・閑散をひと目","最需要期・閑散期を番頭が指摘","仕入れ・人員・新規開拓の打ち手を提案"]},
   banto:{what:"会社の数字（お金・タスク・人）を“全部つないで”見ているAI参謀。話しかけると、いま会社のどこが弱いかを根拠つきで答えます。",points:["「今月ヤバい数字ある？」など普通の言葉で質問→未入金・資金・経費などから弱点を名指し","聞かなくても朝イチで『今日の経営の急所』を赤信号で提示","頑張った社員を見つけて“ねぎらい”を進言（お金の決定・送金は社長）","※答えの根拠は実データ。送信・支払い・確定は必ず人。番頭チャットは今後実装の新機能を含む"]},
